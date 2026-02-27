@@ -1,0 +1,198 @@
+{
+  "tutors": [
+    {
+      "id": "cape-brink",
+      "location": "Cape Brink, Two Island",
+      "description": "Teaches ultimate moves to fully evolved starter Pokémon",
+      "requirement": "National Pokédex not required — available after beating Elite Four",
+      "moves": [
+        {
+          "name": "Blast Burn",
+          "type": "Fire",
+          "category": "Special",
+          "power": 150,
+          "accuracy": 90,
+          "pp": 5,
+          "eligible": ["Charizard"],
+          "note": "Fire-type starter final evolution only"
+        },
+        {
+          "name": "Hydro Cannon",
+          "type": "Water",
+          "category": "Special",
+          "power": 150,
+          "accuracy": 90,
+          "pp": 5,
+          "eligible": ["Blastoise"],
+          "note": "Water-type starter final evolution only"
+        },
+        {
+          "name": "Frenzy Plant",
+          "type": "Grass",
+          "category": "Special",
+          "power": 150,
+          "accuracy": 90,
+          "pp": 5,
+          "eligible": ["Venusaur"],
+          "note": "Grass-type starter final evolution only"
+        }
+      ]
+    },
+    {
+      "id": "one-island-tutor",
+      "location": "One Island / Pokémon Center area",
+      "description": "Teaches a variety of moves — some require National Pokédex",
+      "requirement": "Some moves need National Pokédex",
+      "moves": [
+        {
+          "name": "Mega Punch",
+          "type": "Normal",
+          "category": "Physical",
+          "power": 80,
+          "accuracy": 85,
+          "pp": 20,
+          "eligible": [],
+          "note": "Many Pokémon eligible"
+        },
+        {
+          "name": "Mega Kick",
+          "type": "Normal",
+          "category": "Physical",
+          "power": 120,
+          "accuracy": 75,
+          "pp": 5,
+          "eligible": [],
+          "note": "Many Pokémon eligible"
+        },
+        {
+          "name": "Body Slam",
+          "type": "Normal",
+          "category": "Physical",
+          "power": 85,
+          "accuracy": 100,
+          "pp": 15,
+          "eligible": [],
+          "note": "Many Pokémon eligible"
+        },
+        {
+          "name": "Double-Edge",
+          "type": "Normal",
+          "category": "Physical",
+          "power": 120,
+          "accuracy": 100,
+          "pp": 15,
+          "eligible": [],
+          "note": "Many Pokémon eligible"
+        },
+        {
+          "name": "Counter",
+          "type": "Fighting",
+          "category": "Physical",
+          "power": null,
+          "accuracy": 100,
+          "pp": 20,
+          "eligible": [],
+          "note": "Returns double the damage taken from a Physical move"
+        },
+        {
+          "name": "Seismic Toss",
+          "type": "Fighting",
+          "category": "Physical",
+          "power": null,
+          "accuracy": 100,
+          "pp": 20,
+          "eligible": [],
+          "note": "Deals damage equal to user's level"
+        },
+        {
+          "name": "Mimic",
+          "type": "Normal",
+          "category": "Status",
+          "power": null,
+          "accuracy": null,
+          "pp": 10,
+          "eligible": [],
+          "note": "Copies target's last used move"
+        },
+        {
+          "name": "Dream Eater",
+          "type": "Psychic",
+          "category": "Special",
+          "power": 100,
+          "accuracy": 100,
+          "pp": 15,
+          "eligible": [],
+          "note": "Only works on sleeping targets"
+        },
+        {
+          "name": "Swords Dance",
+          "type": "Normal",
+          "category": "Status",
+          "power": null,
+          "accuracy": null,
+          "pp": 30,
+          "eligible": [],
+          "note": "Sharply raises Attack"
+        },
+        {
+          "name": "Soft-Boiled",
+          "type": "Normal",
+          "category": "Status",
+          "power": null,
+          "accuracy": null,
+          "pp": 10,
+          "eligible": ["Blissey", "Chansey"],
+          "note": "Blissey/Chansey only — restores HP"
+        }
+      ]
+    },
+    {
+      "id": "two-island-tutor",
+      "location": "Two Island",
+      "description": "Additional move tutors available after obtaining National Pokédex",
+      "requirement": "National Pokédex required",
+      "moves": [
+        {
+          "name": "Thunder Wave",
+          "type": "Electric",
+          "category": "Status",
+          "power": null,
+          "accuracy": 100,
+          "pp": 20,
+          "eligible": [],
+          "note": "Paralyzes the target"
+        },
+        {
+          "name": "Substitute",
+          "type": "Normal",
+          "category": "Status",
+          "power": null,
+          "accuracy": null,
+          "pp": 10,
+          "eligible": [],
+          "note": "Creates a decoy using 25% of max HP"
+        },
+        {
+          "name": "Explosion",
+          "type": "Normal",
+          "category": "Physical",
+          "power": 250,
+          "accuracy": 100,
+          "pp": 5,
+          "eligible": [],
+          "note": "User faints after use"
+        },
+        {
+          "name": "Rock Slide",
+          "type": "Rock",
+          "category": "Physical",
+          "power": 75,
+          "accuracy": 90,
+          "pp": 10,
+          "eligible": [],
+          "note": "30% chance to flinch"
+        }
+      ]
+    }
+  ]
+}
