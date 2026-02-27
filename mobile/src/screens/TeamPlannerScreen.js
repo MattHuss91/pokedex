@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity,
   Image, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../theme/colors';
 import TypeBadge from '../components/TypeBadge';
 import WeaknessGrid from '../components/WeaknessGrid';
@@ -10,21 +11,33 @@ import PokedexShell from '../components/PokedexShell';
 import { analyseTeam } from '../services/api';
 
 const MAX_SLOTS = 6;
+const TEAM_STORAGE_KEY = '@frlg_saved_team';
 const ATTACKING_TYPES = [
   'Normal','Fire','Water','Grass','Electric','Ice','Fighting','Poison',
   'Ground','Flying','Psychic','Bug','Rock','Ghost','Dragon','Dark','Steel',
 ];
 
 export default function TeamPlannerScreen({ navigation }) {
-  const [slots,    setSlots]    = useState(Array(MAX_SLOTS).fill(''));
-  const [result,   setResult]   = useState(null);
-  const [loading,  setLoading]  = useState(false);
+  const [slots,     setSlots]     = useState(Array(MAX_SLOTS).fill(''));
+  const [result,    setResult]    = useState(null);
+  const [loading,   setLoading]   = useState(false);
   const [activeTab, setActiveTab] = useState('TEAM');
+
+  // Load saved team from device on mount
+  useEffect(() => {
+    AsyncStorage.getItem(TEAM_STORAGE_KEY).then(saved => {
+      if (saved) {
+        try { setSlots(JSON.parse(saved)); } catch { /* ignore corrupt data */ }
+      }
+    });
+  }, []);
 
   function updateSlot(index, value) {
     const next = [...slots];
     next[index] = value.toLowerCase().trim();
     setSlots(next);
+    // Auto-save to device storage on every change
+    AsyncStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(next)).catch(() => {});
   }
 
   async function runAnalysis() {
@@ -40,16 +53,18 @@ export default function TeamPlannerScreen({ navigation }) {
       setResult(data);
       setActiveTab('ANALYSIS');
     } catch (e) {
-      Alert.alert('Error', 'Failed to analyse team. Is the API running?');
+      Alert.alert('Error', 'Failed to analyse team. Check your internet connection.');
     } finally {
       setLoading(false);
     }
   }
 
   function clearTeam() {
-    setSlots(Array(MAX_SLOTS).fill(''));
+    const empty = Array(MAX_SLOTS).fill('');
+    setSlots(empty);
     setResult(null);
     setActiveTab('TEAM');
+    AsyncStorage.setItem(TEAM_STORAGE_KEY, JSON.stringify(empty)).catch(() => {});
   }
 
   return (
