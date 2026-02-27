@@ -1,0 +1,25 @@
+{
+  "note": "In Generation 3 (Fire Red / Leaf Green), move category is determined by TYPE, not by individual move. This changes in Generation 4 (Diamond/Pearl).",
+  "physical_types": [
+    "Normal",
+    "Fighting",
+    "Flying",
+    "Poison",
+    "Ground",
+    "Rock",
+    "Bug",
+    "Ghost",
+    "Steel"
+  ],
+  "special_types": [
+    "Fire",
+    "Water",
+    "Grass",
+    "Electric",
+    "Ice",
+    "Psychic",
+    "Dragon",
+    "Dark"
+  ],
+  "status_note": "Status moves have no category — they neither deal damage nor are classified Physical/Special"
+}
