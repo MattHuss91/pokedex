@@ -5,6 +5,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "backgroundColor": "#CC0000",
+    "splash": {
+      "backgroundColor": "#CC0000"
+    },
     "android": {
       "package": "com.matthuss91.pokedexfrlg",
       "adaptiveIcon": {
