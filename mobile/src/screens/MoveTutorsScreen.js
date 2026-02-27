@@ -11,7 +11,7 @@ import { fetchMoveTutors, fetchTmsHms } from '../services/api';
 
 const TABS = ['TUTORS', 'TMs', 'HMs'];
 
-export default function MoveTutorsScreen() {
+export default function MoveTutorsScreen({ navigation }) {
   const [tab,     setTab]     = useState('TUTORS');
   const [tutors,  setTutors]  = useState(null);
   const [tmsHms,  setTmsHms]  = useState(null);
@@ -58,13 +58,15 @@ export default function MoveTutorsScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {tab === 'TUTORS' && tutors  && <TutorsTab tutors={tutors} />}
-          {tab === 'TMs'    && tmsHms  && <MoveListTab moves={tmsHms.tms}  prefix="TM" />}
-          {tab === 'HMs'    && tmsHms  && <MoveListTab moves={tmsHms.hms}  prefix="HM" />}
+          {tab === 'TMs'    && tmsHms  && <MoveListTab moves={tmsHms.tms} prefix="TM" navigation={navigation} />}
+          {tab === 'HMs'    && tmsHms  && <MoveListTab moves={tmsHms.hms} prefix="HM" navigation={navigation} />}
         </ScrollView>
       )}
     </PokedexShell>
   );
 }
+
+// ── TUTORS TAB ────────────────────────────────────────────────────────────────
 
 function TutorsTab({ tutors }) {
   const [expanded, setExpanded] = useState({});
@@ -100,30 +102,40 @@ function TutorsTab({ tutors }) {
   );
 }
 
-function MoveListTab({ moves, prefix }) {
+// ── TM / HM LIST TAB ─────────────────────────────────────────────────────────
+
+function MoveListTab({ moves, prefix, navigation }) {
   return (
     <View>
       <View style={styles.gen3Note}>
         <Text style={styles.gen3NoteText}>
-          ★ Category shown uses Gen 3 TYPE-based rules (FRLG)
+          ★ Gen 3 TYPE-based categories (FRLG) · Tap a row for location & learners
         </Text>
       </View>
+
       {/* Column headers */}
       <View style={styles.listHeader}>
-        <Text style={[styles.listHeaderCell, { width: 36 }]}>{prefix}</Text>
-        <Text style={[styles.listHeaderCell, { flex: 1 }]}>NAME</Text>
+        <Text style={[styles.listHeaderCell, { width: 44 }]}>{prefix}</Text>
+        <Text style={[styles.listHeaderCell, { flex: 1, textAlign: 'left', paddingLeft: 4 }]}>NAME</Text>
         <Text style={styles.listHeaderCell}>TYPE</Text>
         <Text style={styles.listHeaderCell}>CAT</Text>
         <Text style={styles.listHeaderCell}>PWR</Text>
         <Text style={styles.listHeaderCell}>ACC</Text>
         <Text style={styles.listHeaderCell}>PP</Text>
       </View>
+
       {moves.map(m => (
-        <View key={m.number} style={styles.listRow}>
-          <Text style={[styles.listCell, styles.listCellNum, { width: 36 }]}>
+        <TouchableOpacity
+          key={m.number}
+          style={styles.listRow}
+          onPress={() => navigation.navigate('TMDetail', { move: m, prefix })}
+          activeOpacity={0.65}
+        >
+          <Text style={[styles.listCell, styles.listCellNum, { width: 44 }]}>
             {prefix}{String(m.number).padStart(2, '0')}
           </Text>
-          <Text style={[styles.listCell, { flex: 1 }]} numberOfLines={1}>
+          {/* Full name, larger, not truncated */}
+          <Text style={[styles.listCell, styles.listCellName, { flex: 1 }]}>
             {m.name}
           </Text>
           <View style={{ width: 52 }}>
@@ -135,11 +147,13 @@ function MoveListTab({ moves, prefix }) {
           <Text style={styles.listCell}>{m.power ?? '—'}</Text>
           <Text style={styles.listCell}>{m.accuracy ? `${m.accuracy}%` : '∞'}</Text>
           <Text style={styles.listCell}>{m.pp}</Text>
-        </View>
+        </TouchableOpacity>
       ))}
     </View>
   );
 }
+
+// ── TUTOR MOVE CARD ───────────────────────────────────────────────────────────
 
 function MoveCard({ move }) {
   return (
@@ -172,6 +186,8 @@ function Stat({ label, value }) {
     </View>
   );
 }
+
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   tabs: { flexDirection: 'row', backgroundColor: '#111' },
@@ -255,7 +271,7 @@ const styles = StyleSheet.create({
   },
   listRow: {
     flexDirection: 'row',
-    paddingVertical: 5,
+    paddingVertical: 7,
     borderBottomWidth: 1,
     borderBottomColor: '#1A1A1A',
     alignItems: 'center',
@@ -268,4 +284,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   listCellNum: { color: '#888' },
+  // Larger, left-aligned name so it's fully readable
+  listCellName: {
+    fontSize: 8,
+    color: '#FFF',
+    textAlign: 'left',
+    paddingLeft: 4,
+  },
 });
