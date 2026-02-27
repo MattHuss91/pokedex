@@ -271,6 +271,122 @@ export async function fetchEggGroups() {
   return result;
 }
 
+// ── Evolution chain ────────────────────────────────────────────────────────────
+
+function formatName(str) {
+  if (!str) return '';
+  return str.split('-').map(capitalise).join(' ');
+}
+
+function formatEvoCondition(det) {
+  if (!det || !det.trigger) return '';
+  const trigger = det.trigger.name;
+  if (trigger === 'level-up') {
+    if (det.min_level)     return `Lv. ${det.min_level}`;
+    if (det.min_happiness) return 'Friendship';
+    if (det.known_move)    return `Learn ${formatName(det.known_move.name)}`;
+    return 'Level Up';
+  }
+  if (trigger === 'use-item') return det.item ? formatName(det.item.name) : 'Item';
+  if (trigger === 'trade') {
+    if (det.held_item)     return `Trade w/ ${formatName(det.held_item.name)}`;
+    if (det.trade_species) return `Trade for ${formatName(det.trade_species.name)}`;
+    return 'Trade';
+  }
+  return formatName(trigger);
+}
+
+function parseChainToSteps(node) {
+  const steps = [];
+  function traverse(n) {
+    const fromName = capitalise(n.species.name);
+    const fromId   = parseInt(n.species.url.split('/').filter(Boolean).pop(), 10);
+    for (const next of (n.evolves_to || [])) {
+      const toName = capitalise(next.species.name);
+      const toId   = parseInt(next.species.url.split('/').filter(Boolean).pop(), 10);
+      const det    = (next.evolution_details || [])[0] || {};
+      steps.push({ from: fromName, fromId, to: toName, toId, condition: formatEvoCondition(det) });
+      traverse(next);
+    }
+  }
+  traverse(node);
+  return steps;
+}
+
+export async function fetchEvolutionChain(nameOrId) {
+  const key = `evo_${nameOrId}`;
+  const cached = await getCached(key);
+  if (cached !== null) return cached;
+
+  const species = await pokeGet(`/pokemon-species/${nameOrId}`).catch(() => null);
+  if (!species?.evolution_chain?.url) {
+    await setCached(key, []);
+    return [];
+  }
+  const chainId = parseInt(species.evolution_chain.url.split('/').filter(Boolean).pop(), 10);
+  const raw     = await pokeGet(`/evolution-chain/${chainId}`);
+  const steps   = parseChainToSteps(raw.chain);
+
+  await setCached(key, steps);
+  return steps;
+}
+
+// ── Wild encounter locations ───────────────────────────────────────────────────
+
+function formatLocationName(name) {
+  return name
+    .replace(/-area$/, '')
+    .split('-')
+    .map(capitalise)
+    .join(' ');
+}
+
+function formatMethod(name) {
+  const map = {
+    'walk':       'Walking',
+    'surf':       'Surfing',
+    'old-rod':    'Old Rod',
+    'good-rod':   'Good Rod',
+    'super-rod':  'Super Rod',
+    'rock-smash': 'Rock Smash',
+    'headbutt':   'Headbutt',
+    'gift':       'Gift',
+    'gift-egg':   'Egg Gift',
+  };
+  return map[name] || capitalise(name);
+}
+
+export async function fetchEncounters(nameOrId) {
+  const key = `enc_${nameOrId}`;
+  const cached = await getCached(key);
+  if (cached !== null) return cached;
+
+  const raw    = await pokeGet(`/pokemon/${nameOrId}/encounters`).catch(() => []);
+  const result = { firered: [], leafgreen: [] };
+
+  for (const area of raw) {
+    const location = formatLocationName(area.location_area.name);
+    for (const vd of area.version_details) {
+      const ver = vd.version.name;
+      if (ver !== 'firered' && ver !== 'leafgreen') continue;
+      const seen = new Set();
+      for (const ed of vd.encounter_details) {
+        const method = formatMethod(ed.method.name);
+        const entry  = `${location}|${method}|${ed.min_level}|${ed.max_level}`;
+        if (seen.has(entry)) continue;
+        seen.add(entry);
+        result[ver].push({ location, method, minLevel: ed.min_level, maxLevel: ed.max_level });
+      }
+    }
+  }
+
+  result.firered.sort((a, b)   => a.location.localeCompare(b.location));
+  result.leafgreen.sort((a, b) => a.location.localeCompare(b.location));
+
+  await setCached(key, result);
+  return result;
+}
+
 export async function fetchEggGroup(name) {
   const key = `egg_group_${name}`;
   const cached = await getCached(key);

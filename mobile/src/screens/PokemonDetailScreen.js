@@ -9,9 +9,9 @@ import CategoryBadge from '../components/CategoryBadge';
 import StatBar from '../components/StatBar';
 import WeaknessGrid from '../components/WeaknessGrid';
 import PokedexShell from '../components/PokedexShell';
-import { fetchPokemon, fetchMove } from '../services/api';
+import { fetchPokemon, fetchMove, fetchEvolutionChain, fetchEncounters } from '../services/api';
 
-const TABS = ['INFO', 'MOVES', 'WEAKNESSES', 'EGG GRP'];
+const TABS = ['INFO', 'MOVES', 'WEAKNESSES', 'EGG GRP', 'LOCATIONS'];
 
 const LEARN_METHOD_LABELS = {
   'level-up': 'LV',
@@ -22,12 +22,14 @@ const LEARN_METHOD_LABELS = {
 
 export default function PokemonDetailScreen({ route, navigation }) {
   const { nameOrId, displayName } = route.params;
-  const [pokemon,   setPokemon]   = useState(null);
-  const [tab,       setTab]       = useState('INFO');
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
-  const [moveCache, setMoveCache] = useState({});
-  const [shiny,     setShiny]     = useState(false);
+  const [pokemon,    setPokemon]    = useState(null);
+  const [tab,        setTab]        = useState('INFO');
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState(null);
+  const [moveCache,  setMoveCache]  = useState({});
+  const [shiny,      setShiny]      = useState(false);
+  const [evoChain,   setEvoChain]   = useState(null);
+  const [encounters, setEncounters] = useState(null);
 
   useEffect(() => {
     load();
@@ -36,9 +38,13 @@ export default function PokemonDetailScreen({ route, navigation }) {
   async function load() {
     setLoading(true);
     setError(null);
+    setEvoChain(null);
+    setEncounters(null);
     try {
       const data = await fetchPokemon(nameOrId);
       setPokemon(data);
+      fetchEvolutionChain(nameOrId).then(setEvoChain).catch(() => setEvoChain([]));
+      fetchEncounters(nameOrId).then(setEncounters).catch(() => setEncounters({ firered: [], leafgreen: [] }));
     } catch (e) {
       setError('Could not load Pokémon data.');
     } finally {
@@ -111,10 +117,11 @@ export default function PokemonDetailScreen({ route, navigation }) {
 
         {/* ── Tab Content ──────────────────────────────────────────────── */}
         <View style={styles.tabContent}>
-          {tab === 'INFO'       && <InfoTab pokemon={pokemon} />}
+          {tab === 'INFO'       && <InfoTab pokemon={pokemon} evoChain={evoChain} />}
           {tab === 'MOVES'      && <MovesTab pokemon={pokemon} loadMove={loadMove} moveCache={moveCache} />}
           {tab === 'WEAKNESSES' && <WeaknessTab pokemon={pokemon} />}
           {tab === 'EGG GRP'   && <EggGroupTab pokemon={pokemon} navigation={navigation} />}
+          {tab === 'LOCATIONS'  && <LocationsTab encounters={encounters} />}
         </View>
 
       </ScrollView>
@@ -124,7 +131,7 @@ export default function PokemonDetailScreen({ route, navigation }) {
 
 // ── INFO TAB ─────────────────────────────────────────────────────────────────
 
-function InfoTab({ pokemon }) {
+function InfoTab({ pokemon, evoChain }) {
   const { stats, height, weight, abilities } = pokemon;
   return (
     <View>
@@ -139,6 +146,49 @@ function InfoTab({ pokemon }) {
       {abilities.map(a => (
         <Row key={a.name} label={a.isHidden ? 'Hidden' : 'Ability'} value={a.name} />
       ))}
+
+      <SectionHeader text="EVOLUTION" />
+      <EvolutionSection chain={evoChain} currentName={pokemon.displayName} />
+    </View>
+  );
+}
+
+// ── EVOLUTION SECTION ─────────────────────────────────────────────────────────
+
+function EvolutionSection({ chain, currentName }) {
+  if (chain === null) return (
+    <ActivityIndicator size="small" color={Colors.pokedexRed} style={{ marginVertical: 8 }} />
+  );
+  if (chain.length === 0) return (
+    <Text style={styles.emptyText}>Does not evolve</Text>
+  );
+  return (
+    <View>
+      {chain.map((step, i) => (
+        <EvoStep key={i} step={step} currentName={currentName} />
+      ))}
+    </View>
+  );
+}
+
+function EvoStep({ step, currentName }) {
+  const fromHL = step.from === currentName;
+  const toHL   = step.to   === currentName;
+  const spriteBase = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+  return (
+    <View style={styles.evoRow}>
+      <View style={styles.evoMon}>
+        <Image source={{ uri: `${spriteBase}${step.fromId}.png` }} style={styles.evoSprite} />
+        <Text style={[styles.evoName, fromHL && styles.evoNameHL]}>{step.from}</Text>
+      </View>
+      <View style={styles.evoMiddle}>
+        <Text style={styles.evoCondition}>{step.condition}</Text>
+        <Text style={styles.evoArrow}>▶</Text>
+      </View>
+      <View style={styles.evoMon}>
+        <Image source={{ uri: `${spriteBase}${step.toId}.png` }} style={styles.evoSprite} />
+        <Text style={[styles.evoName, toHL && styles.evoNameHL]}>{step.to}</Text>
+      </View>
     </View>
   );
 }
@@ -255,6 +305,59 @@ function EggGroupTab({ pokemon, navigation }) {
 
       <SectionHeader text="BREEDING" />
       <Row label="Gender Rate" value={pokemon.genus ? 'See species' : '—'} />
+    </View>
+  );
+}
+
+// ── LOCATIONS TAB ─────────────────────────────────────────────────────────────
+
+function LocationsTab({ encounters }) {
+  if (encounters === null) return (
+    <ActivityIndicator size="small" color={Colors.pokedexRed} style={{ marginTop: 20 }} />
+  );
+
+  const hasFR = encounters.firered.length   > 0;
+  const hasLG = encounters.leafgreen.length > 0;
+
+  if (!hasFR && !hasLG) return (
+    <View style={styles.noEncounterBox}>
+      <Text style={styles.noEncounterText}>Not found in the wild in FRLG</Text>
+      <Text style={styles.noEncounterSub}>(Obtain via trade, gift, or evolution)</Text>
+    </View>
+  );
+
+  return (
+    <View>
+      <View style={styles.encVersionRow}>
+        <View style={[styles.encVersionBadge, { backgroundColor: '#CC0000' }]}>
+          <Text style={styles.encVersionLabel}>FIRE RED</Text>
+        </View>
+        {!hasFR && <Text style={styles.encNotAvail}>Version exclusive — not available</Text>}
+      </View>
+      {hasFR && encounters.firered.map((e, i) => <EncounterRow key={`fr${i}`} enc={e} />)}
+
+      <View style={[styles.encVersionRow, { marginTop: 16 }]}>
+        <View style={[styles.encVersionBadge, { backgroundColor: '#007700' }]}>
+          <Text style={styles.encVersionLabel}>LEAF GREEN</Text>
+        </View>
+        {!hasLG && <Text style={styles.encNotAvail}>Version exclusive — not available</Text>}
+      </View>
+      {hasLG && encounters.leafgreen.map((e, i) => <EncounterRow key={`lg${i}`} enc={e} />)}
+    </View>
+  );
+}
+
+function EncounterRow({ enc }) {
+  const lvl = enc.minLevel === enc.maxLevel
+    ? `Lv. ${enc.minLevel}`
+    : `Lv. ${enc.minLevel}–${enc.maxLevel}`;
+  return (
+    <View style={styles.encRow}>
+      <View style={styles.encLeft}>
+        <Text style={styles.encLocation}>{enc.location}</Text>
+        <Text style={styles.encMethod}>{enc.method}</Text>
+      </View>
+      <Text style={styles.encLevel}>{lvl}</Text>
     </View>
   );
 }
@@ -395,4 +498,52 @@ const styles = StyleSheet.create({
   eggGroupArrow: { fontFamily: 'PokemonGB', fontSize: 7, color: Colors.pokedexRed },
 
   emptyText: { fontFamily: 'PokemonGB', fontSize: 8, color: '#666', textAlign: 'center', marginTop: 20 },
+
+  // evolution
+  evoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1A1A1A',
+  },
+  evoMon: { flex: 1, alignItems: 'center' },
+  evoSprite: { width: 48, height: 48, resizeMode: 'contain' },
+  evoName: { fontFamily: 'PokemonGB', fontSize: 6, color: '#AAA', marginTop: 2, textAlign: 'center' },
+  evoNameHL: { color: Colors.pokedexRed },
+  evoMiddle: { alignItems: 'center', paddingHorizontal: 4 },
+  evoCondition: { fontFamily: 'PokemonGB', fontSize: 6, color: '#888', textAlign: 'center', marginBottom: 2 },
+  evoArrow: { fontFamily: 'PokemonGB', fontSize: 10, color: '#555' },
+
+  // locations
+  noEncounterBox: { alignItems: 'center', marginTop: 24 },
+  noEncounterText: { fontFamily: 'PokemonGB', fontSize: 8, color: '#666', textAlign: 'center' },
+  noEncounterSub: { fontFamily: 'PokemonGB', fontSize: 7, color: '#444', textAlign: 'center', marginTop: 6 },
+
+  encVersionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    gap: 8,
+  },
+  encVersionBadge: {
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  encVersionLabel: { fontFamily: 'PokemonGB', fontSize: 7, color: '#FFF' },
+  encNotAvail: { fontFamily: 'PokemonGB', fontSize: 6, color: '#555' },
+
+  encRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1A1A1A',
+  },
+  encLeft: { flex: 1 },
+  encLocation: { fontFamily: 'PokemonGB', fontSize: 8, color: '#FFF' },
+  encMethod: { fontFamily: 'PokemonGB', fontSize: 6, color: '#888', marginTop: 2 },
+  encLevel: { fontFamily: 'PokemonGB', fontSize: 7, color: '#AAA', marginLeft: 8 },
 });
