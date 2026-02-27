@@ -5,11 +5,12 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '../theme/colors';
 
-import PokedexListScreen  from '../screens/PokedexListScreen';
+import PokedexListScreen   from '../screens/PokedexListScreen';
 import PokemonDetailScreen from '../screens/PokemonDetailScreen';
-import TeamPlannerScreen  from '../screens/TeamPlannerScreen';
-import MoveTutorsScreen   from '../screens/MoveTutorsScreen';
-import EggGroupScreen     from '../screens/EggGroupScreen';
+import TeamPlannerScreen   from '../screens/TeamPlannerScreen';
+import MoveTutorsScreen    from '../screens/MoveTutorsScreen';
+import TMDetailScreen      from '../screens/TMDetailScreen';
+import EggGroupScreen      from '../screens/EggGroupScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -19,9 +20,9 @@ const Tab   = createBottomTabNavigator();
 function PokedexStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="PokedexList"    component={PokedexListScreen} />
-      <Stack.Screen name="PokemonDetail"  component={PokemonDetailScreen} />
-      <Stack.Screen name="EggGroup"       component={EggGroupScreen} />
+      <Stack.Screen name="PokedexList"   component={PokedexListScreen} />
+      <Stack.Screen name="PokemonDetail" component={PokemonDetailScreen} />
+      <Stack.Screen name="EggGroup"      component={EggGroupScreen} />
     </Stack.Navigator>
   );
 }
@@ -33,6 +34,19 @@ function TeamStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="TeamPlanner"   component={TeamPlannerScreen} />
       <Stack.Screen name="PokemonDetail" component={PokemonDetailScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// ── Moves tab stack ──────────────────────────────────────────────────────────
+
+function MovesStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MoveTutors"    component={MoveTutorsScreen} />
+      <Stack.Screen name="TMDetail"      component={TMDetailScreen} />
+      <Stack.Screen name="PokemonDetail" component={PokemonDetailScreen} />
+      <Stack.Screen name="EggGroup"      component={EggGroupScreen} />
     </Stack.Navigator>
   );
 }
@@ -101,7 +115,7 @@ export default function AppNavigator() {
         />
         <Tab.Screen
           name="Moves"
-          component={MoveTutorsScreen}
+          component={MovesStack}
           options={{
             tabBarIcon: ({ focused }) => <TabIcon label="MOVES" emoji="💥" focused={focused} />,
           }}
